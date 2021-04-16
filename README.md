@@ -3,21 +3,20 @@
 Allows to create an html representation of the ALICE O2 data model.
 This can be inserted in docs/framework/datamodel.md of https://github.com/pbuehler/documentation/
 
-The parsing functionality is conatined in ALICEO2dataModel.py.
-The main program is contained in extractDataModel.py.
-The program can be configured with inputCard.xml.
+The parsing functionality is contained in ALICEO2dataModel.py.
+The main program is in extractDataModel.py and is configured with inputCard.xml.
 
 ## As simple as that
 
-- install the software
-git clone git@github.com:pbuehler/ALICEO2dataModel.git
+- Install the software
+git clone [git@github.com:pbuehler/ALICEO2dataModel.git](git@github.com:pbuehler/ALICEO2dataModel.git)
 
-- adapt inputCard.xml
+- Adapt inputCard.xml
 
-set the path in tag data/O2general/mainDir to the actual O2 installation path, e.g. home/me/alice/O2.
+Set the path in tag data/O2general/mainDir to the actual O2 installation path, e.g. home/me/alice/O2. The other parameters should fit.
 
-- run it
+- Run it
 
 ./extractDataModel.py > htmloutput.txt
 
-- update datamodel.md with the content of htmloutput.txt
+- Update datamodel.md with the content of htmloutput.txt
