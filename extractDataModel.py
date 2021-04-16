@@ -69,8 +69,6 @@ def main(initCard):
     hfMainDir = hfMainDir.text.strip()
   if pos == 1:
     hfMainDir = O2dir+"/"+hfMainDir
-  else:
-    hfMainDir = hfMainDir
     
   hfSubDirs = initCard.find('headerFiles/subDirs')
   if hfSubDirs == None:
@@ -120,8 +118,6 @@ def main(initCard):
     cmMainDir = cmMainDir.text.strip()
   if pos == 1:
     cmMainDir = O2dir+"/"+cmMainDir
-  else:
-    cmMainDir = cmMainDir
     
   cmSubDirs = initCard.find('CMLfiles/subDirs')
   if cmSubDirs == None:
@@ -137,7 +133,7 @@ def main(initCard):
 
   cmakefiles = list()
   for cmSubDir in cmSubDirs:
-    sname = cmMainDir+"/"+cmSubDir+"/"+cmtmp
+    sname = cmMainDir+"/"+cmSubDir.strip()+"/"+cmtmp
     if todo == 1:
       print("  ", sname)
     stream = os.popen("ls -1 "+sname)
@@ -167,8 +163,6 @@ def main(initCard):
     codeMainDir = codeMainDir.text.strip()
   if pos == 1:
     codeMainDir = O2dir+"/"+codeMainDir
-  else:
-    codeMainDir = codeMainDir
     
   codeSubDirs = initCard.find('codeFiles/subDirs')
   if codeSubDirs == None:
@@ -184,7 +178,7 @@ def main(initCard):
 
   codefiles = list()
   for codeSubDir in codeSubDirs:
-    sname = codeMainDir+"/"+codeSubDir+"/"+codetmp
+    sname = codeMainDir+"/"+codeSubDir.strip()+"/"+codetmp
     stream = os.popen("grep -l Produces "+sname)
     cfiles = stream.readlines()
     codefiles.extend(cfiles)
