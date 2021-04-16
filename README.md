@@ -9,6 +9,7 @@ The main program is in extractDataModel.py and is configured with inputCard.xml.
 ## As simple as that
 
 - Install the software
+
 git clone [git@github.com:pbuehler/ALICEO2dataModel.git](git@github.com:pbuehler/ALICEO2dataModel.git)
 
 - Adapt inputCard.xml
