@@ -1,0 +1,82 @@
+<?xml version="1.0"?>
+<data>
+
+  <!-- action                -->
+  <!-- 1: print parsed files -->
+  <!-- 2: print data model   -->
+  <!-- 3. create html        -->
+  <action>
+    3
+  </action>
+  
+  <O2general>
+    
+    <mainDir>
+      /home/pbuehler/tmp/O2/O2
+    </mainDir>
+
+    <!-- pos: 1: relative to O2dir, else: absoulte -->
+    <DataModelHeader pos="1">
+      Framework/Core/include/Framework/AnalysisDataModel.h
+    </DataModelHeader>
+    
+    <producer>
+      AO2D files
+    </producer>
+  
+  </O2general>
+  
+  <!-- where to get the header files from -->
+  <headerFiles>
+  
+    <mainDir pos="1">
+      Analysis/DataModel/include/AnalysisDataModel
+    </mainDir>
+    
+    <subDirs>
+      , PID
+    </subDirs>
+    
+    <fileName>
+      *.h
+    </fileName>
+    
+  </headerFiles>
+
+  <!-- where to get the CMakeLists.txt files from -->
+  <CMLfiles>
+  
+    <mainDir pos="1">
+      Analysis/Tasks
+    </mainDir>
+    
+    <subDirs>
+    </subDirs>
+    
+    <fileName>
+      CMakeLists.txt
+    </fileName>
+    
+    <CEdeclaration>
+      o2_add_dpl_workflow
+    </CEdeclaration>
+    
+  </CMLfiles>
+
+  <!-- where to get the tasks code files from -->
+  <codeFiles>
+  
+    <mainDir pos="1">
+      Analysis/Tasks
+    </mainDir>
+    
+    <subDirs>
+    </subDirs>
+    
+    <fileName>
+      *.cxx
+    </fileName>
+    
+  </codeFiles>
+
+</data>
