@@ -175,7 +175,7 @@ class using:
     if self.kind & 1 > 0:
       toPrint += "::iterator"
 
-    print("        <li>"+toPrint+"</li>")
+    print("          <li>"+toPrint+"</li>")
 
 # -----------------------------------------------------------------------------
 class column:
@@ -254,19 +254,21 @@ class table:
       tableName += " ("+tableTypes(1)[self.kind]+")"
     print("  <button class=\"myaccordion\"><i class=\"fa fa-table\"></i> "+tableName+"</button>")
     print("  <div class=\"panel\">")
+    print("    <div class=\"boxed\">")
 
   def printSubHeaderHTML(self):
-    print("    <table class=DataModel>")
-    print("      <tr>")
-    print("        <th>Name</th>")
-    print("        <th></th>")
-    print("        <th>Getter</th>")
-    print("        <th>Type</th>")
-    print("        <th>Comment</th>")
-    print("      </tr>")
+    print("      <table class=DataModel>")
+    print("        <tr>")
+    print("          <th>Name</th>")
+    print("          <th></th>")
+    print("          <th>Getter</th>")
+    print("          <th>Type</th>")
+    print("          <th>Comment</th>")
+    print("        </tr>")
 
   def printFooterHTML(self):
-    print("    </table>")
+    print("      </table>")
+    print("    </div>")
     print("  </div>")
     print("")
 
@@ -453,6 +455,16 @@ class datamodel:
         # print the table header
         tab.printHeaderHTML()
 
+        # print table comment
+        
+        # print extends
+        if tab.kind == 2 or tab.kind == 5:
+          print("      <div>Extends:")
+          print ("        <ul>")
+          print ("          ",tab.toExtendWith)
+          print ("        </ul>")
+          print("      </div>")
+        
         # find all usings with tab
         useTable = list()
         for use in uses:
@@ -463,12 +475,12 @@ class datamodel:
 
         # print these usings
         if len(useTable) > 0:
-          print("    <div>Is used in:")
-          print("      <ul>")
+          print("      <div>Is used in:")
+          print("        <ul>")
           for use in useTable:
             use.printHTML()
-          print("      </ul>")
-          print("    </div>")
+          print("        </ul>")
+          print("      </div>")
 
         # print the table header
         tab.printSubHeaderHTML()
@@ -477,9 +489,9 @@ class datamodel:
         if tab.kind == 2 or tab.kind == 5:
           # this table has to be extended, find the extending table and
           # print all of its columns
-          ind = [i for i, x in enumerate(tabs) if x.name == tab.toExtendWith]
-          if len(ind) > 0:
-            for col in tabs[ind[0]].columns:
+          einds = [i for i, x in enumerate(tabs) if x.name == tab.toExtendWith]
+          for ind in einds:
+            for col in tabs[ind].columns:
               col.printHTML()
 
         # print the remaining columns

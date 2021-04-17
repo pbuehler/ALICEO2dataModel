@@ -5,6 +5,7 @@
   <!-- 1: print parsed files -->
   <!-- 2: print data model   -->
   <!-- 3. create html        -->
+  <!-- else no output        -->
   <action>
     3
   </action>
