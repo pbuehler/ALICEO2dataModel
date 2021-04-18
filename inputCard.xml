@@ -13,27 +13,45 @@
   <O2general>
     
     <mainDir>
-      /home/pbuehler/tmp/O2/O2
+      <local>
+        /home/pbuehler/tmp/O2/O2
+      </local>
+    
+      <GitHub> 
+        https://github.com/AliceO2Group/AliceO2/blob/dev
+      </GitHub>
+      
     </mainDir>
 
-    <!-- pos: 1: relative to O2dir, else: absoulte -->
-    <DataModelHeader pos="1">
+    <!-- relative to mainDir/local -->
+    <DataModelHeader>
       Framework/Core/include/Framework/AnalysisDataModel.h
     </DataModelHeader>
     
+    <!-- title for tables created by default when reading AO2D.root -->
     <producer>
       AO2D files
     </producer>
   
-  </O2general>
+    <exePreamble>
+      o2-analysis-
+    </exePreamble>
+    
+    <CEdeclarationString>
+      o2_add_dpl_workflow
+    </CEdeclarationString>
+    
+`</O2general>
   
   <!-- where to get the header files from -->
   <headerFiles>
   
-    <mainDir pos="1">
+    <!-- relative to mainDir/local -->
+    <mainDir>
       Analysis/DataModel/include/AnalysisDataModel
     </mainDir>
     
+    <!-- relative to mainDir -->
     <subDirs>
       , PID
     </subDirs>
@@ -47,12 +65,14 @@
   <!-- where to get the CMakeLists.txt files from -->
   <CMLfiles>
   
-    <mainDir pos="1">
+    <!-- relative to mainDir/local -->
+    <mainDir>
       Analysis/Tasks
     </mainDir>
     
+    <!-- relative to mainDir -->
     <subDirs>
-      , PID
+      , PID, PWGLF
     </subDirs>
     
     <fileName>
@@ -68,12 +88,14 @@
   <!-- where to get the tasks code files from -->
   <codeFiles>
   
-    <mainDir pos="1">
+    <!-- relative to mainDir/local -->
+    <mainDir>
       Analysis/Tasks
     </mainDir>
     
+    <!-- relative to mainDir -->
     <subDirs>
-      , PID
+      , PID, PWGLF
     </subDirs>
     
     <fileName>

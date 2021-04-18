@@ -19,7 +19,7 @@ def main(initCard):
     todo = int(todo.text)
   
   # O2dir and main header file
-  O2dir = initCard.find('O2general/mainDir')
+  O2dir = initCard.find('O2general/mainDir/local')
   if O2dir == None:
     return
   O2dir = O2dir.text.strip()
@@ -28,16 +28,7 @@ def main(initCard):
   if DMH == None:
     return
   
-  pos = DMH.get('pos')
-  if pos == None:
-    pos = 1
-  else:
-    pos = int(pos)
-  if pos == 1:
-    fileName = O2dir+"/"+DMH.text.strip()
-  else:
-    fileName = DMH.text.strip()
-    
+  fileName = O2dir+"/"+DMH.text.strip()
   mainProducer = initCard.find('O2general/producer')
   if mainProducer == None:
     mainProducer = "AO2D files"
@@ -48,7 +39,7 @@ def main(initCard):
   # read the file and create AO2D datamodel
   if todo == 1:
     print("Main header file: ", fileName)
-  dm = DM.datamodel(mainProducer, fileName)
+  dm = DM.datamodel(mainProducer, ["", "", mainProducer], fileName, initCard)
 
   # now get additional header files with table/column declarations
   # the directories to consider
@@ -61,14 +52,8 @@ def main(initCard):
   if hfMainDir == None:
     hfMainDir = ""
   else:
-    pos = hfMainDir.get('pos')
-    if pos == None:
-      pos = 1
-    else:
-      pos = int(pos)
     hfMainDir = hfMainDir.text.strip()
-  if pos == 1:
-    hfMainDir = O2dir+"/"+hfMainDir
+  hfMainDir = O2dir+"/"+hfMainDir
     
   hfSubDirs = initCard.find('headerFiles/subDirs')
   if hfSubDirs == None:
@@ -92,10 +77,12 @@ def main(initCard):
   # with the AO2D datamodel
   for infile in inclfiles:
     # extract datamodel name
-    name = infile.split('/')[-1].split(".")[0]
+    path = infile.split('/')[:-1]
+    cfile = infile.split('/')[-1]
+    CErelation = [path,cfile,""]
     if todo == 1:
       print("  ", infile.rstrip())
-    dmnew = DM.datamodel(name, infile.rstrip())
+    dmnew = DM.datamodel(cfile.split(".")[0], CErelation, infile.rstrip())
     dm.join(dmnew)
 
   #=============================================== CMakeLists.txt ==============
@@ -110,14 +97,8 @@ def main(initCard):
   if cmMainDir == None:
     cmMainDir = ""
   else:
-    pos = cmMainDir.get('pos')
-    if pos == None:
-      pos = 1
-    else:
-      pos = int(pos)
     cmMainDir = cmMainDir.text.strip()
-  if pos == 1:
-    cmMainDir = O2dir+"/"+cmMainDir
+  cmMainDir = O2dir+"/"+cmMainDir
     
   cmSubDirs = initCard.find('CMLfiles/subDirs')
   if cmSubDirs == None:
@@ -139,7 +120,7 @@ def main(initCard):
     stream = os.popen("ls -1 "+sname)
     cmakefiles.extend(stream.readlines())
 
-  cerelations = DM.CERelations()
+  cerelations = DM.CERelations(initCard)
   for cfile in cmakefiles:
     cfile = cfile.rstrip("\n")
     cerelations.addRelations(cfile)
@@ -155,14 +136,8 @@ def main(initCard):
   if codeMainDir == None:
     codeMainDir = ""
   else:
-    pos = codeMainDir.get('pos')
-    if pos == None:
-      pos = 1
-    else:
-      pos = int(pos)
     codeMainDir = codeMainDir.text.strip()
-  if pos == 1:
-    codeMainDir = O2dir+"/"+codeMainDir
+  codeMainDir = O2dir+"/"+codeMainDir
     
   codeSubDirs = initCard.find('codeFiles/subDirs')
   if codeSubDirs == None:
@@ -190,13 +165,13 @@ def main(initCard):
   # update the data model accordingly using setProducer
   for codefile in codefiles:
     codefile = codefile.rstrip("\n")
-    exename = "o2-analysis-"+cerelations.getExecutable(codefile)
+    CErelation = cerelations.getExecutable(codefile)
     stream = os.popen("grep Produces "+codefile)
     prods = stream.readlines()
     for prod in prods:
       prod = prod.rstrip("\n").strip()
       tableName = DM.fullDataModelName("o2::aod", prod.split("<")[-1].split(">")[0])
-      dm.setProducer(exename, tableName)
+      dm.setProducer(CErelation, tableName)
 
   #=============================================== print out ===================
   # print the data model

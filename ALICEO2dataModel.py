@@ -208,10 +208,7 @@ class column:
     print("        <td>"+columnTypes(1)[self.kind]+"</td>")
     print("        <td>"+self.vname+"</td>")
     print("        <td>"+self.type+"</td>")
-    if self.kind == 1:
-      print("        <td>pointer into table "+self.pointsInto+"</td>")
-    else:
-      print("        <td>"+self.comment+"</td>")
+    print("        <td>"+self.comment+"</td>")
     print("      </tr>")
 
 # .............................................................................
@@ -220,7 +217,7 @@ class table:
     self.kind = kind
     self.nslevel = nslevel
     self.name = name
-    self.producer = ""
+    self.CErelation = ["", "", ""]
     self.cont = cont
     self.colNames = list()
     self.columns = list()
@@ -245,7 +242,7 @@ class table:
   def print(self):
     print("    table: "+self.name)
     print("          kind: ", self.kind)
-    print("      producer: "+self.producer)
+    print("      producer: "+self.CErelation[2])
     for col in self.columns:
       print("      column: "+col.cname+":"+col.type)
 
@@ -291,10 +288,10 @@ class namespace:
     self.tables.append(table)
 
   # set the producer
-  def setProducer(self, producerName, tableName):
+  def setProducer(self, CErelation, tableName):
     for ind in range(len(self.tables)):
       if self.tables[ind].name == tableName:
-        self.tables[ind].producer = producerName
+        self.tables[ind].CErelation = CErelation
 
   # fill columns of all tables
   def synchronize(self, dm):
@@ -334,13 +331,15 @@ class namespace:
 
 # -----------------------------------------------------------------------------
 class datamodel:
-  def __init__(self, name, fileName):
+  def __init__(self, name, CErelation, fileName, initCard = None):
     with open(fileName, 'r') as file:
       self.name = name
-      self.producers = list()
-      self.producers.append(name)
+      self.CErelations = list()
+      self.CErelations.append(CErelation)
       self.defines = list()
       self.namespaces = list()
+      if initCard != None:
+        self.initCard = initCard
 
       # read the file
       lines_in_file = file.readlines()
@@ -361,17 +360,17 @@ class datamodel:
   def addDefine(self, define):
     self.defines.append(define)
 
-  def setProducer(self, producerName, tableName):
+  def setProducer(self, CErelation, tableName):
     for nsp in self.namespaces:
-      nsp.setProducer(producerName, tableName)
-      if not producerName in self.producers:
-        self.producers.append(producerName)
+      nsp.setProducer(CErelation, tableName)
+      if not CErelation in self.CErelations:
+        self.CErelations.append(CErelation)
 
-  def isProducedBy(self, producer):
+  def isProducedBy(self, CErelation):
     producedBy = list()
     for nsp in self.namespaces:
       for table in nsp.tables:
-        if table.producer == producer:
+        if table.CErelation[2] == CErelation[2]:
           producedBy.append(table)
     return producedBy
 
@@ -415,12 +414,26 @@ class datamodel:
   def print(self):
     print("data model: "+self.name)
     print("  producers:")
-    for prod in self.producers:
-      print("    ", prod)
+    for CErelation in self.CErelations:
+      print("    ", CErelation[2])
     for ns in self.namespaces:
       ns.print()
 
   def printHTML(self):
+    # get some variables
+    tmp = self.initCard.find("O2general/mainDir/local")
+    if tmp == None:
+      tmp = ""
+    else:
+      tmp = tmp.text.strip()
+    O2path = tmp
+    tmp = self.initCard.find("O2general/mainDir/GitHub")
+    if tmp == None:
+      tmp = ""
+    else:
+      tmp = tmp.text.strip()
+    O2href = tmp
+    
     # gather all tables and columns
     tabs = list()
     uses = list()
@@ -433,9 +446,9 @@ class datamodel:
     # loop over producers
     HTheaderToWrite = True
     amFirst = True
-    for producer in self.producers:
+    for CErelation in self.CErelations:    
       # get tables with given producer
-      inds = [i for i, x in enumerate(tabs) if x.producer == producer]
+      inds = [i for i, x in enumerate(tabs) if x.CErelation[2] == CErelation[2]]
       if len(inds) == 0:
         continue
 
@@ -444,7 +457,15 @@ class datamodel:
         HTheaderToWrite = False
 
       print("")
-      print("#### ", producer)
+      print("#### ", CErelation[2])
+      
+      # add source code information if available
+      if CErelation[1] != "":
+        if O2href != "":
+          print ("Code file: <a href=\""+O2href+"/"+CErelation[0].split(O2path)[1]+"/"+CErelation[1]+"\" target=\"_blank\">"+CErelation[1]+"</a>")
+        else:
+          print ("Code file: "+CErelation[0]+"/"+CErelation[1])
+          
       print("<div>")
       print("")
 
@@ -857,7 +878,7 @@ def extractColumns(nslevel, content):
     kind = [i for i, x in enumerate(types) if x == words[icol].txt][0]
     cname = words[icol+2].txt
     vname = words[icol+4].txt
-    if kind == 1 or kind == 2:
+    if kind in [1,2]:
       cname = cname+"Id"
       vname = vname+"Id"
 
@@ -882,10 +903,20 @@ def extractColumns(nslevel, content):
     col = column(kind, nslevel, cname, vname, type, block(cont))
     if kind == 1:
       col.pointsInto = words[icol+8].txt
+    if kind == 2:
+      col.pointsInto = words[icol+2].txt+"s"
 
     # add a comment if available
+    comment =""
+    if kind in [1,2]:
+      comment = "Pointer into "+col.pointsInto
     line = lines[words[icol].lnr]
-    col.comment = block(line.split("//!")[1:], True).strip()
+    toks = line.split("//!")
+    if len(toks) > 1:
+      tmp = block(toks[1:], True).strip()
+      if tmp != "":
+        comment = tmp
+    col.comment = comment
 
     cols.append(col)
 
@@ -998,7 +1029,7 @@ def parseContent(content, nslevel, dm):
     # extract tables
     tables = extractTables(nslevel, content)
     for tab in tables:
-      tab.producer = dm.producers[0]
+      tab.CErelation = dm.CErelations[0]
       nsp.addTable(tab)
 
     # extract usings
@@ -1012,10 +1043,28 @@ def parseContent(content, nslevel, dm):
   return True
 
 # -----------------------------------------------------------------------------
+# A CErelation is a tuple<string,3>
+#   [0]: path
+#   [1]: code file (without path)
+#   [2]: executable
 class CERelations:
-  def __init__(self):
+  def __init__(self, initCard):
     self.relations = list()
 
+    # exePreamble from initCard
+    self.exePreamble = initCard.find('O2general/exePreamble')
+    if self.exePreamble == None:
+      self.exePreamble = ""
+    else:
+      self.exePreamble = self.exePreamble.text.strip()
+    
+    # CEdeclarationString from initCard
+    self.CEdeclarationString = initCard.find('O2general/CEdeclarationString')
+    if self.CEdeclarationString == None:
+      self.CEdeclarationString = "o2_add_dpl_workflow"
+    else:
+      self.CEdeclarationString = self.CEdeclarationString.text.strip()
+    
   def addRelations(self, fileName):
     path = block(fileName.split("/")[:-1], True, "/")
     with open(fileName, 'r') as file:
@@ -1025,9 +1074,9 @@ class CERelations:
 
       # parse CMakeLists file
       # executable - code relations are defined with o2_add_dpl_workflow
-      idef = [ind for ind, x in enumerate(content[0]) if x.txt == "o2_add_dpl_workflow"]
+      idef = [ind for ind, x in enumerate(content[0]) if x.txt == self.CEdeclarationString]
       for ind in idef:
-        ename = content[0][ind+2].txt
+        ename = self.exePreamble + content[0][ind+2].txt
         cname = content[0][ind+4].txt
         if len(cname.split(".")) < 2:
           cname += ".cxx"
@@ -1035,19 +1084,26 @@ class CERelations:
 
   def getExecutable(self, codeFile):
     # find the executable corresponding to codeFile
+    CErelation = ["", "", ""]
     ice = [ind for ind, x in enumerate(self.relations) if x[0]+x[1] == codeFile]
-    exeName = ""
     if len(ice) > 0:
-      exeName = self.relations[ice[0]][2]
+      CErelation = self.relations[ice[0]]
+    return CErelation
 
-    return exeName
+  def getCodeFile(self, executable):
+    # find the code file corresponding to executable
+    CErelation = ["", "", ""]
+    ice = [ind for ind, x in enumerate(self.relations) if x[2] == executable]
+    if len(ice) > 0:
+      CErelation = self.relations[ice[0]]
+    return CErelation
 
   def print(self):
     print("CE relations")
     for relation in self.relations:
       print(" path  :", relation[0])
       print("  cname:", relation[1])
-      print("  ename:", relation[2])
+      print("  ename:", self.exePreamble+relation[2])
 
 
 # -----------------------------------------------------------------------------
