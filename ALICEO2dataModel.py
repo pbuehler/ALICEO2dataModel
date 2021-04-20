@@ -891,19 +891,22 @@ def extractColumns(nslevel, content):
       gname = gname+"Id"
 
     # determine the type of the colums
+    # can be type, array<type,n>, or type[n]
     type = ""
     if words[icol].txt == types[0]:
-      type = words[icol+6].txt
+      type = block(words[icol+6:icol+iend[0]],False)
     elif words[icol].txt == types[1]:
       type = words[icol+6].txt
     elif words[icol].txt == types[2]:
       type = "int32"
     elif words[icol].txt == types[3]:
-      type = words[icol+6].txt
+      iend = [i for i, x in enumerate(list_in([","], words[icol+6:])) if x == True]
+      type = block(words[icol+6:icol++6+iend[0]],False)
     elif words[icol].txt == types[4]:
       iarr = [i for i, x in enumerate(list_in(["-", ">"], cont)) if x == True]
       if len(iarr) > 0:
-        type = cont[iarr[0]+2].txt
+        iend = [i for i, x in enumerate(list_in(["{"], cont[iarr[0]+2:])) if x == True]
+        type = block(cont[iarr[0]+2:iarr[0]+2+iend[0]],False)
       else:
         type = "?"
 
