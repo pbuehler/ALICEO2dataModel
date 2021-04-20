@@ -179,11 +179,12 @@ class using:
 
 # -----------------------------------------------------------------------------
 class column:
-  def __init__(self, kind, nslevel, cname, vname, type, cont):
+  def __init__(self, kind, nslevel, hfile, cname, gname, type, cont):
     self.kind = kind
     self.nslevel = nslevel
-    self.cname = cname
-    self.vname = vname
+    self.hfile = hfile        # header file
+    self.cname = cname        # column name
+    self.gname = gname        # getter name
     self.type = type
     self.cont = cont
     self.pointsInto = ""
@@ -198,7 +199,7 @@ class column:
   def print(self):
     print("    column: "+self.cname)
     print("      kind: ", self.kind)
-    print("    access: "+self.vname)
+    print("    access: "+self.gname)
     print("      type: "+self.type)
     print("   comment: "+self.comment)
 
@@ -206,17 +207,18 @@ class column:
     print("      <tr>")
     print("        <td>"+fullDataModelName(self.nslevel, self.cname)+"</td>")
     print("        <td>"+columnTypes(1)[self.kind]+"</td>")
-    print("        <td>"+self.vname+"</td>")
+    print("        <td>"+self.gname+"</td>")
     print("        <td>"+self.type+"</td>")
     print("        <td>"+self.comment+"</td>")
     print("      </tr>")
 
 # .............................................................................
 class table:
-  def __init__(self, kind, nslevel, name, cont):
+  def __init__(self, kind, nslevel, hfile, tname, cont):
     self.kind = kind
     self.nslevel = nslevel
-    self.name = name
+    self.hfile = hfile          # header file
+    self.tname = tname          # table name
     self.CErelation = ["", "", ""]
     self.cont = cont
     self.colNames = list()
@@ -229,7 +231,7 @@ class table:
 
   def where(self, tables):
     for ind in range(len(tables)):
-      if self.name == tables[ind].name:
+      if self.tname == tables[ind].tname:
         return ind
     return -1
 
@@ -240,14 +242,14 @@ class table:
       self.columns.append(dm.getColumn(colName))
 
   def print(self):
-    print("    table: "+self.name)
+    print("    table: "+self.tname)
     print("          kind: ", self.kind)
     print("      producer: "+self.CErelation[2])
     for col in self.columns:
       print("      column: "+col.cname+":"+col.type)
 
   def printHeaderHTML(self):
-    tableName = self.name
+    tableName = self.tname
     if tableTypes(1)[self.kind] != "":
       tableName += " ("+tableTypes(1)[self.kind]+")"
     print("  <button class=\"myaccordion\"><i class=\"fa fa-table\"></i> "+tableName+"</button>")
@@ -290,7 +292,7 @@ class namespace:
   # set the producer
   def setProducer(self, CErelation, tableName):
     for ind in range(len(self.tables)):
-      if self.tables[ind].name == tableName:
+      if self.tables[ind].tname == tableName:
         self.tables[ind].CErelation = CErelation
 
   # fill columns of all tables
@@ -331,9 +333,9 @@ class namespace:
 
 # -----------------------------------------------------------------------------
 class datamodel:
-  def __init__(self, name, CErelation, fileName, initCard = None):
-    with open(fileName, 'r') as file:
-      self.name = name
+  def __init__(self, dmname, CErelation, hfile, initCard = None):
+    with open(hfile, 'r') as file:
+      self.dmname = dmname
       self.CErelations = list()
       self.CErelations.append(CErelation)
       self.defines = list()
@@ -346,7 +348,7 @@ class datamodel:
       content = pickContent(lines_in_file)
 
       # parse datamodel
-      parseContent(content, "", self)
+      parseContent(hfile, content, "", self)
       self.synchronize()
 
   def addNamespace(self, namespace):
@@ -400,7 +402,7 @@ class datamodel:
 
     # index columns are special!
     if cnameToSearch == "o2::soa::Index":
-      return column(len(columnTypes(1))-1, "o2::soa", cnameToSearch, "globalIndex", "int64_t", colName)
+      return column(len(columnTypes(1))-1, "o2::soa", "", cnameToSearch, "globalIndex", "int64_t", colName)
 
     for nsp in self.namespaces:
       for col in nsp.columns:
@@ -409,10 +411,10 @@ class datamodel:
           return col
 
     # create dummy column
-    return column(-1, "", cnameToSearch, "", "?", colName)
+    return column(-1, "", "", cnameToSearch, "", "?", colName)
 
   def print(self):
-    print("data model: "+self.name)
+    print("data model: "+self.dmname)
     print("  producers:")
     for CErelation in self.CErelations:
       print("    ", CErelation[2])
@@ -480,6 +482,12 @@ class datamodel:
         print ("      ",tab.comment)
         print ("    </div>")
         
+        # print header file
+        hf2u = block(tab.hfile.split(O2path)[1:],False).strip().lstrip("/")
+        print ("    <div>")
+        print ("      Header file: <a href=\""+O2href+"/"+hf2u+"\" target=\"_blank\">"+hf2u+"</a>")
+        print ("    </div>")
+        
         # print extends
         if tab.kind == 2 or tab.kind == 5:
           print ("    <div>Extends:")
@@ -491,9 +499,9 @@ class datamodel:
         # find all usings with tab
         useTable = list()
         for use in uses:
-          if tab.name in use.joiners:
+          if tab.tname in use.joiners:
             useTable.append(use)
-          elif tab.name == use.master:
+          elif tab.tname == use.master:
             useTable.append(use)
 
         # print these usings
@@ -512,7 +520,7 @@ class datamodel:
         if tab.kind == 2 or tab.kind == 5:
           # this table has to be extended, find the extending table and
           # print all of its columns
-          einds = [i for i, x in enumerate(tabs) if x.name == tab.toExtendWith]
+          einds = [i for i, x in enumerate(tabs) if x.tname == tab.toExtendWith]
           for ind in einds:
             for col in tabs[ind].columns:
               col.printHTML()
@@ -826,13 +834,13 @@ def extractTables(nslevel, content):
     cont = words[icol:iend[0]+icol+2]
 
     kind = [i for i, x in enumerate(types) if x == words[icol].txt][0]
-    name = fullDataModelName(nslevel, words[icol+2].txt)
+    tname = fullDataModelName(nslevel, words[icol+2].txt)
 
     # extract column names
     fullColNames = tableColumnNames(nslevel, cont, kind)
 
-    # kind, namespace, name, cont
-    tab = table(kind, nslevel, name, block(cont))
+    # kind, namespace, tname, cont
+    tab = table(kind, nslevel, "", tname, block(cont))
     tab.colNames = fullColNames
 
     # EXTENDED_TABLE?
@@ -877,10 +885,10 @@ def extractColumns(nslevel, content):
 
     kind = [i for i, x in enumerate(types) if x == words[icol].txt][0]
     cname = words[icol+2].txt
-    vname = words[icol+4].txt
+    gname = words[icol+4].txt
     if kind in [1,2]:
       cname = cname+"Id"
-      vname = vname+"Id"
+      gname = gname+"Id"
 
     # determine the type of the colums
     type = ""
@@ -900,7 +908,7 @@ def extractColumns(nslevel, content):
         type = "?"
 
     # kind, namespace, name, type, cont
-    col = column(kind, nslevel, cname, vname, type, block(cont))
+    col = column(kind, nslevel, "", cname, gname, type, block(cont))
     if kind == 1:
       col.pointsInto = words[icol+8].txt
     if kind == 2:
@@ -961,7 +969,7 @@ def extractUsings(nslevel, content):
 # .............................................................................
 # A namespace is contained between "namespace 'name' {" and "}"
 # Be aware that namespaces can be nested!
-def parseContent(content, nslevel, dm):
+def parseContent(hfile, content, nslevel, dm):
   words = content[0]
   lines = content[1]
 
@@ -996,12 +1004,12 @@ def parseContent(content, nslevel, dm):
       nslnew = b2u
 
     c2u = select(content, p10+1, p11)
-    parseContent(c2u, nslnew, dm)
+    parseContent(hfile, c2u, nslnew, dm)
 
     # remove words of ns and process rest
     if p10 > 0 & p11 < len(words):
       c2u = select(content, 0, p10, p11+1)
-      parseContent(c2u, nslevel, dm)
+      parseContent(hfile, c2u, nslevel, dm)
 
   else:
     # this block of text is a namespace
@@ -1024,12 +1032,14 @@ def parseContent(content, nslevel, dm):
     # extract columns
     cols = extractColumns(nslevel, content)
     for col in cols:
+      col.hfile = hfile
       nsp.addColumn(col)
 
     # extract tables
     tables = extractTables(nslevel, content)
     for tab in tables:
       tab.CErelation = dm.CErelations[0]
+      tab.hfile = hfile
       nsp.addTable(tab)
 
     # extract usings
