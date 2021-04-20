@@ -14,7 +14,7 @@ git clone [git@github.com:pbuehler/ALICEO2dataModel.git](git@github.com:pbuehler
 
 - Adapt inputCard.xml
 
-Set the path in tag data/O2general/mainDir to the actual O2 installation path, e.g. home/me/alice/O2. The other parameters should fit.
+Set the path in tag data/O2general/mainDir/local to the actual O2 installation path, e.g. home/me/alice/O2. The other parameters should fit.
 
 - Run it
 
