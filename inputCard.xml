@@ -14,7 +14,7 @@
     
     <mainDir>
       <local>
-        /home/pbuehler/tmp/O2/O2
+        /home/pbuehler/alice/O2
       </local>
     
       <GitHub> 
@@ -41,7 +41,7 @@
       o2_add_dpl_workflow
     </CEdeclarationString>
     
-`</O2general>
+  </O2general>
   
   <!-- where to get the header files from -->
   <headerFiles>
@@ -72,7 +72,7 @@
     
     <!-- relative to mainDir -->
     <subDirs>
-      , PID, PWGLF
+      , PID, PWGLF, PWGHF
     </subDirs>
     
     <fileName>
@@ -95,7 +95,7 @@
     
     <!-- relative to mainDir -->
     <subDirs>
-      , PID, PWGLF
+      , PID, PWGLF, PWGHF
     </subDirs>
     
     <fileName>

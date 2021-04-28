@@ -977,27 +977,44 @@ def parseContent(hfile, content, nslevel, dm):
   lines = content[1]
 
   # does this block contain a namespace definition?
+  # 2 formats
+  #   1. using namespace .....;
+  #   2. namespace .... {}
   isps = [ind for ind, x in enumerate(words) if x.txt == "namespace"]
   if len(isps) > 0:
     p10 = isps[0]
-    iop = [ind for ind, x in enumerate(words[p10:]) if x.txt == "{"]
-    if len(iop) == 0:
-      print("The opening bracket \"{\" is missing!")
-      print(block(words[p10:]))
-      exit()
-    icl = [ind for ind, x in enumerate(words[p10:]) if x.txt == "}"]
-    if len(icl) == 0:
-      print("The closing bracket \"}\" is missing!")
-      print(block(words[p10:]))
-      exit()
+    if words[p10-1].txt == "using":
+      # 1. using namespace .....;
+      iop = [ind for ind, x in enumerate(words[p10:]) if x.txt == ";"]
+      if len(iop) == 0:
+        print("using namespace does not end with \";\"!")
+        print(block(words[p10:]))
+        exit()
+      p11 = len(words)
+      
+    else:      
+      # 2. namespace .... {}
+      iop = [ind for ind, x in enumerate(words[p10:]) if x.txt == "{"]
+      if len(iop) == 0:
+        print("The opening bracket \"{\" is missing!")
+        print(block(words[p10:]))
+        exit()
+      icl = [ind for ind, x in enumerate(words[p10:]) if x.txt == "}"]
+      if len(icl) == 0:
+        print("The closing bracket \"}\" is missing!")
+        print(block(words[p10:]))
+        exit()
 
-    # find namespace block within {}
-    nind = len(words) - p10
-    ind = np.zeros(nind)
-    ind[iop] = 1
-    ind[icl] = -1
-    p11 = np.where(np.cumsum(ind[iop[0]:]) == 0)
-    p11 = p10+iop[0]+p11[0][0]
+      # find namespace block within {}
+      nind = len(words) - p10
+      ind = np.zeros(nind)
+      ind[iop] = 1
+      ind[icl] = -1
+      p11 = np.where(np.cumsum(ind[iop[0]:]) == 0)
+      if len(p11[0]) <= 0:
+        print (hfile)
+        exit()
+      p11 = p10+iop[0]+p11[0][0]
 
     # analyze the next block with updated nslevel
     b2u = block(words[p10+1:p10+iop[0]], False)
