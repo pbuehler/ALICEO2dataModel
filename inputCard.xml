@@ -7,22 +7,25 @@
   <!-- 3. create html        -->
   <!-- else no output        -->
   <action>
-    1
+    3
   </action>
   
   <O2general>
     
     <mainDir>
+      <!-- main path to the local O2 installation -->
       <local>
         /home/pbuehler/alice/O2
       </local>
     
+      <!-- ALICE O2 gitHub repository -->
       <GitHub> 
         https://github.com/AliceO2Group/AliceO2/blob/dev
       </GitHub>
       
     </mainDir>
 
+    <!-- definition of the main AnalysisDataModel header file -->
     <!-- relative to mainDir/local -->
     <DataModelHeader>
       Framework/Core/include/Framework/AnalysisDataModel.h
@@ -33,17 +36,20 @@
       AO2D files
     </producer>
   
+    <!-- leading string of task executables -->
     <exePreamble>
       o2-analysis-
     </exePreamble>
     
+    <!-- string used in CMakefiles.txt to define a task executable -->
     <CEdeclarationString>
       o2_add_dpl_workflow
     </CEdeclarationString>
     
   </O2general>
   
-  <!-- where to get the header files from -->
+  
+  <!-- where to get the extra header files from -->
   <headerFiles>
   
     <!-- relative to mainDir/local -->
@@ -56,12 +62,14 @@
       ., PID
     </subDirs>
     
+    <!-- selection of files to consider as header files -->
     <fileName>
       *.h
     </fileName>
     
   </headerFiles>
 
+  
   <!-- where to get the CMakeLists.txt files from -->
   <CMLfiles>
   
@@ -75,17 +83,15 @@
       ., PID, PWGLF, PWGHF
     </subDirs>
     
+    <!-- selection of files to consider as CMakeLists files -->
     <fileName>
       CMakeLists.txt
     </fileName>
     
-    <CEdeclaration>
-      o2_add_dpl_workflow
-    </CEdeclaration>
-    
   </CMLfiles>
 
-  <!-- where to get the tasks code files from -->
+  
+  <!-- where to get the task code files from -->
   <codeFiles>
   
     <!-- relative to mainDir/local -->
@@ -98,6 +104,7 @@
       ., PID, PWGLF, PWGHF
     </subDirs>
     
+    <!-- selection of files to consider as task code files -->
     <fileName>
       *.cxx
     </fileName>
