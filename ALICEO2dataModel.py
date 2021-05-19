@@ -1027,7 +1027,7 @@ def parseContent(hfile, content, nslevel, dm):
     parseContent(hfile, c2u, nslnew, dm)
 
     # remove words of ns and process rest
-    if p10 > 0 & p11 < len(words):
+    if p10 > 0 and p11 < len(words):
       c2u = select(content, 0, p10, p11+1)
       parseContent(hfile, c2u, nslevel, dm)
 

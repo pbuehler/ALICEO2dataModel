@@ -7,7 +7,7 @@
   <!-- 3. create html        -->
   <!-- else no output        -->
   <action>
-    3
+    1
   </action>
   
   <O2general>
@@ -51,9 +51,9 @@
       Analysis/DataModel/include/AnalysisDataModel
     </mainDir>
     
-    <!-- relative to mainDir -->
+    <!-- relative to headerFiles/mainDir -->
     <subDirs>
-      , PID
+      ., PID
     </subDirs>
     
     <fileName>
@@ -70,9 +70,9 @@
       Analysis/Tasks
     </mainDir>
     
-    <!-- relative to mainDir -->
+    <!-- relative to CMLfiles/mainDir -->
     <subDirs>
-      , PID, PWGLF, PWGHF
+      ., PID, PWGLF, PWGHF
     </subDirs>
     
     <fileName>
@@ -93,9 +93,9 @@
       Analysis/Tasks
     </mainDir>
     
-    <!-- relative to mainDir -->
+    <!-- relative to codeFiles/mainDir -->
     <subDirs>
-      , PID, PWGLF, PWGHF
+      ., PID, PWGLF, PWGHF
     </subDirs>
     
     <fileName>
