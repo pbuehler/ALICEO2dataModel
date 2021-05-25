@@ -11,6 +11,54 @@ The ALICEO2dataModel converter analyses these header and task code files and ext
 
 The converter is implemented in python. The parsing functionality is contained in ALICEO2dataModel.py and the main program is in extractDataModel.py. The process is configured with inputCard.xml.
 
+
+### Data Items
+
+Three types of files are considered:
+
+- header files
+- code files
+- CMakeLists.txt
+
+#### Header files
+Header files are combed for definitions of:
+
+- namespace
+- #define
+- typedef
+- using
+- COLUMN declarations
+- TABLE declarations
+
+In a first step the header files are scanned and comments (//) and comment blocks (/* ... */) are removed, whereas special comments (//!) are understood to be annotations of tables and columns. Blocks of line extensions (\) are reduced to a single line. 
+
+In the such processed text #define directives are searched for and are used to substitute related text in the block starting with the actual #define directive and  ending with an #undef directive or the end of the text.
+
+In a next processing round the text is split into namespaces, taking into account that namespaces can be nested. Namespaces are defined either with 'using namespace ...;' which is then active until the end of the text or with 'namespace {....}' which makes the namespace active only within the curled brackets. The splitting into namespaces is implemented in an iterative way.
+
+The text contained in a singular namespace (namespace not containing any other namespace) is searched for typedef specifiers which are used to substitute related types. Then column and table declarations and finally 'using' directives within the namespace block are extracted.
+
+As a result of this procedure one obtains a 'datamodel' object with a list of namespaces with their column and table declarations and using directives.
+
+#### Code files
+Code files are combed for definitions of:
+
+- Produces
+
+Tables have a producer. In case of the tables filled with data from the AO2D files the producer is defined to be AO2D. For tables which are filled by analysis tasks the producer is deduced from the related Produces function declaration. The code files are scanned for Produces declarations and the name of the code file is added to the respective table in the previously described 'datamodel' object.
+
+#### CMakeLists.txt files
+CMakeLists.txt files are combed for definitions of:
+
+- o2_add_dpl_workflow (executables and the related code files)
+
+The CMakeLists files are finally needed to relate a given code file with an executable, which finally allows to associate a table with its producing executable.
+
+### Output
+
+The html representation of the 'datamodel' object is achieved with the printHTML method.
+
+
 ## As simple as that
 
 - Install the software
