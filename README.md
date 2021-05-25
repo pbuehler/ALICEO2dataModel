@@ -14,7 +14,7 @@ The converter is implemented in python. The parsing functionality is contained i
 
 ### Data Items
 
-Three types of files are considered tp contain information related to the ALICE O2 Data Analysis Model:
+Three types of files are considered to contain information related to the ALICE O2 Data Analysis Model:
 
 - header files
 - code files
