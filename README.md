@@ -86,16 +86,19 @@ Usage:
 mdUpdate.py cc fn2u fnold fnnew
 
 cc: 1: AO2D, 2: Helpers, 3: Joins
+
 fn2u: file with new text
+
 fnold: file with old text
+
 fnnew: file with replaced text
 
 mdUpdate.py replaces in file fnold the block of text which is delimited by two lines containing a delimiter string by the block of text in file fn2u which is delimited by two lines containing the same delimiter string and write the output to file fnnew. The delimiter string is obtained from the inputCard.xml, depending on the value of cc. If fnnew = fnold, the content of fnold is overwritten.
 
 So to update the md files do:
 
-> ./extractDataModel.py > htmloutput.txt
-> path2mds=./testing
-> ./mdUpdate.py 1 htmloutput.txt $path2mds/ao2dTables.md $path2mds/ao2dTables.md
-> ./mdUpdate.py 2 htmloutput.txt $path2mds/helperTaskTables.md $path2mds/helperTaskTables.md
-> ./mdUpdate.py 3 htmloutput.txt $path2mds/joinsAndIterators.md $path2mds/joinsAndIterators.md
+- ./extractDataModel.py > htmloutput.txt
+- path2mds=./testing
+- ./mdUpdate.py 1 htmloutput.txt $path2mds/ao2dTables.md $path2mds/ao2dTables.md
+- ./mdUpdate.py 2 htmloutput.txt $path2mds/helperTaskTables.md $path2mds/helperTaskTables.md
+- ./mdUpdate.py 3 htmloutput.txt $path2mds/joinsAndIterators.md $path2mds/joinsAndIterators.md
