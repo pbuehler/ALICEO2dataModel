@@ -97,8 +97,14 @@ mdUpdate.py replaces in file fnold the block of text which is delimited by two l
 
 So to update the md files do:
 
-- ./extractDataModel.py > htmloutput.txt
-- path2mds=./testing
-- ./mdUpdate.py 1 htmloutput.txt $path2mds/ao2dTables.md $path2mds/ao2dTables.md
-- ./mdUpdate.py 2 htmloutput.txt $path2mds/helperTaskTables.md $path2mds/helperTaskTables.md
-- ./mdUpdate.py 3 htmloutput.txt $path2mds/joinsAndIterators.md $path2mds/joinsAndIterators.md
+./extractDataModel.py > htmloutput.txt
+path2mds=./testing
+docdir=../analysis-framework/docs/datamodel
+./mdUpdate.py 1 htmloutput.txt $path2mds/ao2dTables.md $path2mds/ao2dTables.md
+./mdUpdate.py 2 htmloutput.txt $path2mds/helperTaskTables.md $path2mds/helperTaskTables.md
+./mdUpdate.py 3 htmloutput.txt $path2mds/pwgTables.md $path2mds/pwgTables.md
+./mdUpdate.py 4 htmloutput.txt $path2mds/joinsAndIterators.md $path2mds/joinsAndIterators.md
+cp $path2mds/ao2dTables.md $docdir/.
+cp $path2mds/helperTaskTables.md $docdir/.
+cp $path2mds/pwgTables.md $docdir/.
+cp $path2mds/joinsAndIterators.md $docdir/.

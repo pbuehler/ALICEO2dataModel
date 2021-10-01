@@ -217,6 +217,7 @@ class column:
     return -1
 
   def print(self):
+    print("        ns: "+self.nslevel)
     print("    column: "+self.cname)
     print("      kind: ", self.kind)
     print("    access: "+self.gname)
@@ -241,7 +242,7 @@ class table:
     self.nslevel = nslevel
     self.hfile = hfile          # header file
     self.tname = tname          # table name
-    self.CErelation = ["", "", ""]
+    self.CErelations = list()
     self.cont = cont
     self.colNames = list()
     self.columns = list()
@@ -261,14 +262,18 @@ class table:
   def synchronize(self, dm):
     for colName in self.colNames:
       # get column with name colName
-      self.columns.append(dm.getColumn(colName))
+      col = dm.getColumn(colName)
+      if col not in self.columns:
+        self.columns.append(col)
 
   def print(self):
     print("    table: "+self.tname)
     print("          kind: ", self.kind)
-    print("      producer: "+self.CErelation[2])
+    print("     producers: ",len(self.CErelations))
+    for cer in self.CErelations:
+      print("             ",cer[2])
     for col in self.columns:
-      print("      column: "+col.cname+":"+col.type)
+      print("        column: "+col.cname+":"+col.type)
 
   def printHeaderHTML(self):
     tableName = self.tname
@@ -295,6 +300,8 @@ class table:
 
 
 # -----------------------------------------------------------------------------
+
+
 class namespace:
   def __init__(self, nslevel, cont):
     self.nslevel = nslevel
@@ -316,7 +323,8 @@ class namespace:
   def setProducer(self, CErelation, tableName):
     for ind in range(len(self.tables)):
       if self.tables[ind].tname == tableName:
-        self.tables[ind].CErelation = CErelation
+        if not CErelation in self.tables[ind].CErelations:
+          self.tables[ind].CErelations.append(CErelation)
 
   # fill columns of all tables
   def synchronize(self, dm):
@@ -374,7 +382,7 @@ class datamodel:
 
       # parse datamodel
       parseContent(hfile, content, "", self)
-      self.synchronize()
+      #self.synchronize()
 
   def addNamespace(self, namespace):
     # does this namespace exist already?
@@ -397,7 +405,7 @@ class datamodel:
     producedBy = list()
     for nsp in self.namespaces:
       for table in nsp.tables:
-        if table.CErelation[2] == CErelation[2]:
+        if CErelation in table.CErelations:
           producedBy.append(table)
     return producedBy
 
@@ -446,20 +454,112 @@ class datamodel:
     for ns in self.namespaces:
       ns.print()
 
+  def printProducerTables(self,href2u,path2u,tabs,uses,CER,tabs2u):
+    print("")                                                                     
+    print("#### ", CER[2])                                                 
+
+    # add source code information if available                                    
+    if CER[1] != "":                                                       
+      if href2u != "":                                                            
+        print("Code file: <a href=\""+href2u+"/"+CER[0].split(path2u)[1]+  
+          "/"+CER[1]+"\" target=\"_blank\">"+CER[1]+"</a>")         
+      else:                                                                       
+        print("Code file: "+CER[0]+"/"+CER[1])                      
+
+    print("<div>")                                                                
+    print("")                                                                     
+
+    # print all tables of given producer                                          
+    for tab in tabs2u:                                                              
+      # print the table header                                                    
+      tab.printHeaderHTML()                                                       
+
+      # print table comment                                                       
+      print("    <div>")                                                          
+      print("      ", tab.comment)                                                
+      print("    </div>")                                                         
+
+      # print header file                                                         
+      hf2u = block(tab.hfile.split(path2u)[                                       
+                   1:], False).strip().lstrip("/")                                
+      print("    <div>")                                                          
+      print("      Header file: <a href=\""+href2u +                              
+            "/"+hf2u+"\" target=\"_blank\">"+hf2u+"</a>")                         
+      print("    </div>")                                                         
+
+      # print extends                                                             
+      if tab.kind == 2 or tab.kind == 5:                                          
+        print("    <div>Extends:")                                                
+        print("      <ul>")                                                       
+        print("        ", tab.toExtendWith)                                       
+        print("      </ul>")                                                      
+        print("    </div>")                                                       
+
+      # find all usings with tab                                                  
+      useTable = list()                                                           
+      for use in uses:                                                            
+        if tab.tname in use.joiners:                                              
+          useTable.append(use)                                                    
+        elif tab.tname == use.master:                                             
+          useTable.append(use)                                                    
+
+      # print these usings                                                        
+      if len(useTable) > 0:                                                       
+        print("    <div>Is used in:")                                             
+        print("      <ul>")                                                       
+        for use in useTable:                                                      
+          use.printHTML()                                                         
+        print("      </ul>")                                                      
+        print("    </div>")                                                       
+
+      # print the table header                                                    
+      tab.printSubHeaderHTML()                                                    
+
+      # EXTENDED_TABLE and EXTENDED_TABLE_USER are extended                       
+      if tab.kind == 2 or tab.kind == 5:                                          
+        # this table has to be extended, find the extending table and             
+        # print all of its columns                                                
+        einds = [i for i, x in enumerate(tabs) if x.tname == tab.toExtendWith]                                 
+        for ind in einds:                                                         
+          for col in tabs[ind].columns:                                           
+            col.printHTML()                                                       
+
+      # print the remaining columns                                               
+      for col in tab.columns:                                                     
+        col.printHTML()                                                           
+
+      # print the table footer                                                    
+      tab.printFooterHTML()                                                       
+
+    print("</div>")                                                               
+
+
   def printHTML(self):
     # get some variables
-    tmp = self.initCard.find("O2general/mainDir/local")
+    tmp = self.initCard.find("O2general/mainDir/O2local")
     if tmp == None:
       tmp = ""
     else:
       tmp = tmp.text.strip()
     O2path = tmp
-    tmp = self.initCard.find("O2general/mainDir/GitHub")
+    tmp = self.initCard.find("O2general/mainDir/O2Physicslocal")
+    if tmp == None:
+      tmp = ""
+    else:
+      tmp = tmp.text.strip()
+    O2Physicspath = tmp
+    tmp = self.initCard.find("O2general/mainDir/O2GitHub")
     if tmp == None:
       tmp = ""
     else:
       tmp = tmp.text.strip()
     O2href = tmp
+    tmp = self.initCard.find("O2general/mainDir/O2PhysicsGitHub")
+    if tmp == None:
+      tmp = ""
+    else:
+      tmp = tmp.text.strip()
+    O2Physicshref = tmp
     tmp = self.initCard.find("O2general/delimAO2D")
     if tmp == None:
       tmp = ""
@@ -472,6 +572,12 @@ class datamodel:
     else:
       tmp = tmp.text.strip()
     delimHelpers = tmp
+    tmp = self.initCard.find("O2general/delimPWGs")
+    if tmp == None:
+      tmp = ""
+    else:
+      tmp = tmp.text.strip()
+    delimPWGs = tmp
     tmp = self.initCard.find("O2general/delimJoins")
     if tmp == None:
       tmp = ""
@@ -488,114 +594,62 @@ class datamodel:
       for use in nsp.usings:
         uses.append(use)
 
-    # loop over producers
-    HTheaderToWrite = True
-    amFirst = True
-    for CErelation in self.CErelations:
-      # get tables with given producer
-      inds = [i for i, x in enumerate(
-          tabs) if x.CErelation[2] == CErelation[2]]
-      if len(inds) == 0:
-        continue
-
-      if amFirst == True:
-        print(delimAO2D)
-      else:
-        if HTheaderToWrite == True:
-          print(delimAO2D)
-          print("")
-          print(delimHelpers)
-          HTheaderToWrite = False
-
-      print("")
-      print("#### ", CErelation[2])
-
-      # add source code information if available
-      if CErelation[1] != "":
-        if O2href != "":
-          print("Code file: <a href=\""+O2href+"/"+CErelation[0].split(O2path)[
-                1]+"/"+CErelation[1]+"\" target=\"_blank\">"+CErelation[1]+"</a>")
-        else:
-          print("Code file: "+CErelation[0]+"/"+CErelation[1])
-
-      print("<div>")
-      print("")
-
-      for ind in inds:
-        tab = tabs[ind]
-
-        # print the table header
-        tab.printHeaderHTML()
-
-        # print table comment
-        print("    <div>")
-        print("      ", tab.comment)
-        print("    </div>")
-
-        # print header file
-        hf2u = block(tab.hfile.split(O2path)[
-                     1:], False).strip().lstrip("/")
-        print("    <div>")
-        print("      Header file: <a href=\""+O2href +
-              "/"+hf2u+"\" target=\"_blank\">"+hf2u+"</a>")
-        print("    </div>")
-
-        # print extends
-        if tab.kind == 2 or tab.kind == 5:
-          print("    <div>Extends:")
-          print("      <ul>")
-          print("        ", tab.toExtendWith)
-          print("      </ul>")
-          print("    </div>")
-
-        # find all usings with tab
-        useTable = list()
-        for use in uses:
-          if tab.tname in use.joiners:
-            useTable.append(use)
-          elif tab.tname == use.master:
-            useTable.append(use)
-
-        # print these usings
-        if len(useTable) > 0:
-          print("    <div>Is used in:")
-          print("      <ul>")
-          for use in useTable:
-            use.printHTML()
-          print("      </ul>")
-          print("    </div>")
-
-        # print the table header
-        tab.printSubHeaderHTML()
-
-        # EXTENDED_TABLE and EXTENDED_TABLE_USER are extended
-        if tab.kind == 2 or tab.kind == 5:
-          # this table has to be extended, find the extending table and
-          # print all of its columns
-          einds = [i for i, x in enumerate(
-              tabs) if x.tname == tab.toExtendWith]
-          for ind in einds:
-            for col in tabs[ind].columns:
-              col.printHTML()
-
-        # print the remaining columns
-        for col in tab.columns:
-          col.printHTML()
-
-        # print the table footer
-        tab.printFooterHTML()
-
-      print("</div>")
-      amFirst = False
-
-    # now print the usings
+    # Create html documents in 4 steps
+    # 1. main producer
+    # 2. helper tasks
+    # 3. PWG tasks
+    # 4. joins
+    
+    # 1. main producer
+    print(delimAO2D)
+    inds = [i for i, x in enumerate(self.CErelations) if x[3] == 'Main']
+    CER2u = [self.CErelations[i] for i in inds]
+    for CER in CER2u:
+      inds = [i for i, x in enumerate(tabs) if CER in x.CErelations]
+      tabs2u = [tabs[i] for i in inds]
+      self.printProducerTables(O2href,O2path,tabs,uses,CER,tabs2u)
+    print(delimAO2D)
+    
+    # 2. helper tasks
+    print("")
     print(delimHelpers)
-    if len(uses) > 0:
+    inds = [i for i, x in enumerate(self.CErelations) if x[3] == 'Helper']
+    CER2u = [self.CErelations[i] for i in inds]
+    for CER in CER2u:
+      inds = [i for i, x in enumerate(tabs) if CER in x.CErelations]
+      tabs2u = [tabs[i] for i in inds]
+      self.printProducerTables(O2Physicshref,O2Physicspath,tabs,uses,CER,tabs2u)
+    print(delimHelpers)
+    
+    # 3. PWG tasks
+    print("")
+    print(delimPWGs)
+    inds = [i for i, x in enumerate(self.CErelations) if x[3] == 'PWG']
+    CERsPWG = [self.CErelations[i] for i in inds]
+    
+    # PWG data model names
+    dmnames = [CERsPWG[i][4] for i in list(range(1,len(CERsPWG)))]
+    dmnames = list(set(dmnames))
+    for dmname in dmnames:
       print("")
+      print("##", dmname)
+      
+      inds = [i for i, x in enumerate(CERsPWG) if x[4] == dmname]
+      CER2u = [CERsPWG[i] for i in inds]
+      for CER in CER2u:          
+        inds = [i for i, x in enumerate(tabs) if CER in x.CErelations]
+        tabs2u = [tabs[i] for i in inds]
+        self.printProducerTables(O2Physicshref,O2Physicspath,tabs,uses,CER,tabs2u)
+    
+    print(delimPWGs)
+    print("")
+    
+    # now print the usings
+    if len(uses) > 0:
       print(delimJoins)
       print("")
       print("<a name=\"usings\"></a>")
-      print("## List of defined joins and iterators")
+      print("#### List of defined joins and iterators")
       print("<div>")
       for use in uses:
         print("")
@@ -640,11 +694,6 @@ def split(block):
 
   # split into words
   words = nltk.word_tokenize(block)
-  
-  #print("")
-  #print(" new split")
-  #print("")
-  #print(words)
 
   return words
 
@@ -1150,7 +1199,7 @@ def parseContent(hfile, content, nslevel, dm):
     # extract tables
     tables = extractTables(nslevel, content)
     for tab in tables:
-      tab.CErelation = dm.CErelations[0]
+      tab.CErelations.append(dm.CErelations[0])
       tab.hfile = hfile
       nsp.addTable(tab)
 
@@ -1169,6 +1218,7 @@ def parseContent(hfile, content, nslevel, dm):
 #   [0]: path
 #   [1]: code file (without path)
 #   [2]: executable
+#   [3]: type: Main, Helper, PWG
 
 
 class CERelations:
@@ -1186,11 +1236,11 @@ class CERelations:
     self.CEdeclarationString = initCard.find(
         'O2general/CEdeclarationString')
     if self.CEdeclarationString == None:
-      self.CEdeclarationString = "o2_add_dpl_workflow"
+      self.CEdeclarationString = "o2physics_add_dpl_workflow"
     else:
       self.CEdeclarationString = self.CEdeclarationString.text.strip()
 
-  def addRelations(self, fileName):
+  def addRelations(self, fileName, ptype, dmname):
     path = block(fileName.split("/")[:-1], True, "/")
     with open(fileName, 'r') as file:
       # read the file
@@ -1200,13 +1250,13 @@ class CERelations:
       # parse CMakeLists file
       # executable - code relations are defined with o2_add_dpl_workflow
       idef = [ind for ind, x in enumerate(
-          content[0]) if x.txt == self.CEdeclarationString]
+        content[0]) if x.txt == self.CEdeclarationString]
       for ind in idef:
         ename = self.exePreamble + content[0][ind+2].txt
         cname = content[0][ind+4].txt
         if len(cname.split(".")) < 2:
           cname += ".cxx"
-        self.relations.append([path, cname, ename])
+        self.relations.append([path,cname,ename,ptype,dmname])
 
   def getExecutable(self, codeFile):
     # find the executable corresponding to codeFile
@@ -1232,6 +1282,8 @@ class CERelations:
       print(" path  :", relation[0])
       print("  cname:", relation[1])
       print("  ename:", self.exePreamble+relation[2])
+      print("   type:", relation[3])
+      print("   name:", relation[4])
 
 
 # -----------------------------------------------------------------------------

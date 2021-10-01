@@ -6,62 +6,60 @@ import ALICEO2dataModel as DM
 import xml.etree.ElementTree as ET
 
 # -----------------------------------------------------------------------------
-# main
+# mainDataModel
 #
 # .............................................................................
-def main(initCard):
-
-  # which action
-  todo = initCard.find('action')
-  if todo == None:
-    todo = 1
-  else:
-    todo = int(todo.text)
-
+def mainDataModel(DMs, initCard, todo=0):
   # O2dir and main header file
-  O2dir = initCard.find('O2general/mainDir/local')
+  O2dir = initCard.find('O2general/mainDir/O2local')
   if O2dir == None:
-    return
+    return None
   O2dir = O2dir.text.strip()
 
-  DMH = initCard.find('O2general/DataModelHeader')
-  if DMH == None:
-    return
-
-  fileName = O2dir+"/"+DMH.text.strip()
   mainProducer = initCard.find('O2general/producer')
   if mainProducer == None:
     mainProducer = "AO2D files"
   else:
     mainProducer = mainProducer.text.strip()
 
-  # =============================================== main header file ============
-  # read the file and create AO2D datamodel
-  if todo == 1:
-    print("Main header file: ", fileName)
-  dm = DM.datamodel(mainProducer, ["", "", mainProducer], fileName, initCard)
+  # find DataModel of type='Main'
+  dm = None
+  for subDM in DMs:
+    ptype = subDM.attrib['type']
+    if ptype == 'Main':
+      dmname = subDM.attrib['name']
+      fileName = subDM.find('headerFiles/fileName')
+      if fileName != None:
+        fileName = O2dir+'/'+fileName.text.strip()
+        if todo == 1:
+          print("  name: ", fileName)
+        dm = DM.datamodel(mainProducer, ["","",mainProducer,ptype,dmname], fileName, initCard)
+        break
+  
+  return dm
+  
+# -----------------------------------------------------------------------------
+# updateDataModel
+#
+# .............................................................................
+def updateDataModel(O2Physicsdir, dm, subDM, todo=0):
+  ptype = subDM.attrib['type']
+  dmname = subDM.attrib['name']
 
-  # now get additional header files with table/column declarations
-  # the directories to consider
-  if todo == 1:
-    print()
-    print("Other header files")
-
-  # =============================================== other header files ==========
-  hfMainDir = initCard.find('headerFiles/mainDir')
+  hfMainDir = subDM.find('headerFiles/mainDir')
   if hfMainDir == None:
     hfMainDir = ""
   else:
     hfMainDir = hfMainDir.text.strip()
-  hfMainDir = O2dir+"/"+hfMainDir
+  hfMainDir = O2Physicsdir+"/"+hfMainDir
 
-  hfSubDirs = initCard.find('headerFiles/subDirs')
+  hfSubDirs = subDM.find('headerFiles/subDirs')
   if hfSubDirs == None:
     hfSubDirs = ['']
   else:
     hfSubDirs = hfSubDirs.text.strip().split(",")
 
-  hftmp = initCard.find('headerFiles/fileName')
+  hftmp = subDM.find('headerFiles/fileName')
   if hftmp == None:
     hftmp = "*.h"
   else:
@@ -74,41 +72,44 @@ def main(initCard):
     inclfiles.extend(stream.readlines())
 
   # loop over these header files and join the related datamodels
-  # with the AO2D datamodel
+  # with the dm
   for infile in inclfiles:
+    if todo == 1:
+      print("    ", infile.rstrip())
+
     # extract datamodel name
     path = infile.split('/')[:-1]
     cfile = infile.split('/')[-1]
-    CErelation = [path, cfile, ""]
-    if todo == 1:
-      print("  ", infile.rstrip())
+    CErelation = [path,cfile,"",ptype,dmname]
     dmnew = DM.datamodel(cfile.split(".")[0], CErelation, infile.rstrip())
     dm.join(dmnew)
+  
+  return True
+  
+# -----------------------------------------------------------------------------
+# addCERelations
+#
+# .............................................................................
+def addCERelations(O2Physicsdir, cerelations, subDM, todo=0):
+  ptype = subDM.attrib['type']
+  dmname = subDM.attrib['name']
 
-  # =============================================== CMakeLists.txt ==============
-  # analyze CMakeLists.txt and extract code - executable relations defined
-  # with o2_add_dpl_workflow
-  # the directories to consider
-  if todo == 1:
-    print()
-    print("CMakeLists.txt")
-
-  cmMainDir = initCard.find('CMLfiles/mainDir')
+  cmMainDir = subDM.find('CMLfiles/mainDir')
   if cmMainDir == None:
     cmMainDir = ""
   else:
     cmMainDir = cmMainDir.text.strip()
-  cmMainDir = O2dir+"/"+cmMainDir
+  cmMainDir = O2Physicsdir+"/"+cmMainDir
 
-  cmSubDirs = initCard.find('CMLfiles/subDirs')
+  cmSubDirs = subDM.find('CMLfiles/subDirs')
   if cmSubDirs == None:
     cmSubDirs = [""]
   else:
     cmSubDirs = cmSubDirs.text.strip().split(",")
 
-  cmtmp = initCard.find('CMLfiles/fileName')
+  cmtmp = subDM.find('CMLfiles/fileName')
   if cmtmp == None:
-    cmtmp = "*"
+    cmtmp = "CMakeLists.txt"
   else:
     cmtmp = cmtmp.text.strip()
 
@@ -116,38 +117,38 @@ def main(initCard):
   for cmSubDir in cmSubDirs:
     sname = cmMainDir+"/"+cmSubDir.strip()+"/"+cmtmp
     if todo == 1:
-      print("  ", sname)
+      print("    ", sname)
+      
     stream = os.popen("ls -1 "+sname)
     cmakefiles.extend(stream.readlines())
 
-  cerelations = DM.CERelations(initCard)
   for cfile in cmakefiles:
     cfile = cfile.rstrip("\n")
-    cerelations.addRelations(cfile)
-
-  # =============================================== code files ==================
-  # get a list of producer code files (*.cxx)
-  # the directories to consider
-  if todo == 1:
-    print()
-    print("Code files")
-
-  codeMainDir = initCard.find('codeFiles/mainDir')
+    cerelations.addRelations(cfile, ptype, dmname)
+  
+  return True
+  
+# -----------------------------------------------------------------------------
+# setProducers
+#
+# .............................................................................
+def setProducers(O2Physicsdir, cerelations, dm, subDM, todo=0):
+  codeMainDir = subDM.find('codeFiles/mainDir')
   if codeMainDir == None:
     codeMainDir = ""
   else:
     codeMainDir = codeMainDir.text.strip()
-  codeMainDir = O2dir+"/"+codeMainDir
+  codeMainDir = O2Physicsdir+"/"+codeMainDir
 
-  codeSubDirs = initCard.find('codeFiles/subDirs')
+  codeSubDirs = subDM.find('codeFiles/subDirs')
   if codeSubDirs == None:
     codeSubDirs = [""]
   else:
     codeSubDirs = codeSubDirs.text.strip().split(",")
 
-  codetmp = initCard.find('codeFiles/fileName')
+  codetmp = subDM.find('codeFiles/fileName')
   if codetmp == None:
-    codetmp = "*"
+    codetmp = "*.cxx"
   else:
     codetmp = codetmp.text.strip()
 
@@ -159,9 +160,9 @@ def main(initCard):
     codefiles.extend(cfiles)
     if todo == 1:
       for cfile in cfiles:
-        print("  ", cfile.rstrip("\n"))
+        print("    ", cfile.rstrip("\n"))
 
-  # loop over these code files an find out which tables they produce
+  # loop over these code files and find out which tables they produce
   # update the data model accordingly using setProducer
   for codefile in codefiles:
     codefile = codefile.rstrip("\n")
@@ -172,20 +173,158 @@ def main(initCard):
       prod = prod.rstrip("\n").strip()
       tableName = DM.fullDataModelName("o2::aod", prod.split("<")[-1].split(">")[0])
       dm.setProducer(CErelation, tableName)
+  
+  return True
+  
+# -----------------------------------------------------------------------------
+# main
+#
+# .............................................................................
+def main(initCard, todo=0):
+
+  # DataModel definitions
+  DMs = initCard.find('DataModels')
+  if DMs == None:
+    return
+  
+  # =============================================== main header file ============
+  if todo == 1:
+    print("Main header file:")
+
+  dm = mainDataModel(DMs,initCard,todo)
+  if dm == None:
+    return
+    
+  # =============================================== other header files ==========
+  # now get additional header files with table/column declarations
+  # the directories to consider
+  # O2Physicsdir
+  O2Physicsdir = initCard.find('O2general/mainDir/O2Physicslocal')
+  if O2Physicsdir == None:
+    return
+  O2Physicsdir = O2Physicsdir.text.strip()
+
+  if todo == 1:
+    print()
+    print("Other header files:")
+
+  # join Helper data models
+  if todo == 1:
+    print()
+    print("  Helpers:")
+
+  isOK = False
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'Helper':
+      isOK = updateDataModel(O2Physicsdir, dm, subDM, todo)
+      break
+  if not isOK:
+    return
+    
+  # join PWG data models
+  if todo == 1:
+    print()
+    print("  PWGs:")
+
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'PWG':
+      isOK = isOK & updateDataModel(O2Physicsdir, dm, subDM, todo)
+      print("")
+  if not isOK:
+    return
+    
+  # synchronize the entire datamodel  
+  dm.synchronize()
+
+  # =============================================== CMakeLists.txt ==============
+  # analyze CMakeLists.txt and extract code - executable relations defined
+  # with o2_add_dpl_workflow
+  if todo == 1:
+    print()
+    print("CMakeLists:")
+
+  cerelations = DM.CERelations(initCard)
+
+  # add CERelations for Helper tasks
+  if todo == 1:
+    print()
+    print("  Helpers:")
+
+  isOK = False
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'Helper':
+      isOK = addCERelations(O2Physicsdir, cerelations, subDM, todo)
+      break
+  if not isOK:
+    return
+    
+  # add CERelations for PWG tasks
+  if todo == 1:
+    print()
+    print("  PWGs:")
+
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'PWG':
+      isOK = isOK & addCERelations(O2Physicsdir, cerelations, subDM, todo)
+      print("")
+  if not isOK:
+    return
+
+  # =============================================== code files ==================
+  # get a list of producer code files (*.cxx)
+  if todo == 1:
+    print()
+    print("Code files:")
+
+  # add Helper code files
+  if todo == 1:
+    print()
+    print("  Helpers:")
+
+  isOK = False
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'Helper':
+      isOK = setProducers(O2Physicsdir, cerelations, dm, subDM, todo)
+      break
+  if not isOK:
+    return
+    
+  # add PWG code files
+  if todo == 1:
+    print()
+    print("  PWGs:")
+
+  for subDM in DMs:
+    if subDM.attrib['type'] == 'PWG':
+      isOK = isOK & setProducers(O2Physicsdir, cerelations, dm, subDM, todo)
+      print("")
+  if not isOK:
+    return
 
   # =============================================== print out ===================
   # print the data model
+  if todo == 1:
+    for rel in cerelations.relations:
+      for r in rel:
+        print(r)
+      print("")
   if todo == 2:
     dm.print()
   if todo == 3:
     dm.printHTML()
 
-
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
 
-  initCard = ET.parse("inputCard.xml")
+  initCard = ET.parse("inputCard.xml")  
 
-  main(initCard)
+  # which action
+  todo = initCard.find('action')
+  if todo == None:
+    todo = 1
+  else:
+    todo = int(todo.text)
+
+  main(initCard,todo)
 
 # -----------------------------------------------------------------------------
