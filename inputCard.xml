@@ -64,7 +64,7 @@
     <delimPWGs>
       &lt;!-- Block with PWG tables --&gt;
     </delimPWGs>
-    
+  
   </O2general>
   
   
@@ -92,21 +92,42 @@
           Framework/Core/include/Framework/AnalysisDataModel.h
         </fileName>
       </headerFiles>
+      
+      <categories>
+        <category name="General">
+          o2::aod::BCs, o2::aod::Timestamps, o2::aod::Collisions
+        </category>
+        <category name="Tracks">
+          o2::aod::Tracks, o2::aod::TracksCov, o2::aod::TracksExtra, o2::aod::StoredTracks, o2::aod::StoredTracksCov, o2::aod::StoredTracksExtra, o2::aod::MFTTracks, o2::aod::StoredMFTTracks, o2::aod::FwdTracks, o2::aod::FwdTracksCov, o2::aod::StoredFwdTracks, o2::aod::StoredFwdTracksCov, o2::aod::AmbiguousTracks, o2::aod::AmbiguousMFTTracks, o2::aod::AmbiguousFwdTracks
+        </category>
+        <category name="Detectors">
+          o2::aod::FV0As, o2::aod::FT0s, o2::aod::FDD, so2::aod::HMPIDs, o2::aod::Calos, o2::aod::CaloTriggers, o2::aod::Zdcs, o2::aod::FV0Cs
+        <category name="Strangeness">
+          o2::aod::StoredV0s, o2::aod::TransientV0s, o2::aod::StoredCascades, o2::aod::TransientCascades
+        </category>
+        <category name="Indices">
+          o2::aod::Run3MatchedExclusive, o2::aod::Run3MatchedSparse, o2::aod::MatchedBCCollisionsExclusive, o2::aod::MatchedBCCollisionsSparse, o2::aod::Run3MatchedToBCExclusive, o2::aod::Run3MatchedToBCSparse
+        </category>
+        <category name="MonteCarlo">
+          o2::aod::McCollisions, o2::aod::StoredMcParticles, o2::aod::McParticles, o2::aod::McTrackLabels, o2::aod::McMFTTrackLabels, o2::aod::McFwdTrackLabels, o2::aod::McCaloLabels, o2::aod::McCollisionLabels
+        </category>
+        <category name="Run2">
+          o2::aod::Run2BCInfos, o2::aod::Run2MatchedExclusive, o2::aod::Run2MatchedSparse, o2::aod::Run2MatchedToBCSparse
+        </category>
+      </categories>
+      
     </DataModel>
   
     <DataModel type="Helper" name="Helpers">
       <headerFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          .
+          Common
         </mainDir>
-        <!-- relative to headerFiles/mainDir -->
-        <subDirs>
-          Common/Core/PID, Common/DataModel
-        </subDirs>
         <!-- selection of files to consider as header files -->
+        <!-- relative to headerFiles/mainDir -->
         <fileName>
-          *.h
+          Core/PID/*.h, DataModel/*.h
         </fileName>
       </headerFiles>
 
@@ -114,15 +135,12 @@
       <CMLfiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          .
+          Common/TableProducer
         </mainDir>
-        <!-- relative to CMLfiles/mainDir -->
-        <subDirs>
-          Common/TableProducer, Common/TableProducer/PID
-        </subDirs>
         <!-- selection of files to consider as CMakeLists files -->
+        <!-- relative to CMLfiles/mainDir -->
         <fileName>
-          CMakeLists.txt
+          CMakeLists.txt, PID/CMakeLists.txt
         </fileName>
       </CMLfiles>
 
@@ -130,34 +148,28 @@
       <codeFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          .
+          Common/TableProducer
         </mainDir>
-        <!-- relative to codeFiles/mainDir -->
-        <subDirs>
-          Common/TableProducer, Common/TableProducer/PID
-        </subDirs>
         <!-- selection of files to consider as task code files -->
+        <!-- relative to codeFiles/mainDir -->
         <fileName>
-          *.cxx
+          *.cxx, PID/*.cxx
         </fileName>
       </codeFiles>
     </DataModel>
     
   
-    <DataModel type="PWG" name="PWGDQ">
+    <DataModel type="PWG" name="CF">
       <!-- where to get the extra header files from -->
       <headerFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGDQ
+          PWGCF
         </mainDir>
-        <!-- relative to headerFiles/mainDir -->
-        <subDirs>
-          DataModel
-        </subDirs>
         <!-- selection of files to consider as header files -->
+        <!-- relative to headerFiles/mainDir -->
         <fileName>
-          *.h
+          DataModel/*.h
         </fileName>
       </headerFiles>
 
@@ -165,15 +177,12 @@
       <CMLfiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGDQ
+          PWGCF
         </mainDir>
-        <!-- relative to CMLfiles/mainDir -->
-        <subDirs>
-          TableProducer
-        </subDirs>
         <!-- selection of files to consider as CMakeLists files -->
+        <!-- relative to CMLfiles/mainDir -->
         <fileName>
-          CMakeLists.txt
+          TableProducer/CMakeLists.txt
         </fileName>
       </CMLfiles>
 
@@ -181,34 +190,28 @@
       <codeFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGDQ
+          PWGCF
         </mainDir>
-        <!-- relative to codeFiles/mainDir -->
-        <subDirs>
-          TableProducer
-        </subDirs>
         <!-- selection of files to consider as task code files -->
+        <!-- relative to codeFiles/mainDir -->
         <fileName>
-          *.cxx
+          TableProducer/*.cxx
         </fileName>
       </codeFiles>
     </DataModel>
 
 
-    <DataModel type="PWG" name="PWGCF">
+    <DataModel type="PWG" name="DQ">
       <!-- where to get the extra header files from -->
       <headerFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGCF
+          PWGDQ
         </mainDir>
-        <!-- relative to headerFiles/mainDir -->
-        <subDirs>
-          DataModel
-        </subDirs>
         <!-- selection of files to consider as header files -->
+        <!-- relative to headerFiles/mainDir -->
         <fileName>
-          *.h
+          DataModel/*.h
         </fileName>
       </headerFiles>
 
@@ -216,15 +219,12 @@
       <CMLfiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGCF
+          PWGDQ
         </mainDir>
-        <!-- relative to CMLfiles/mainDir -->
-        <subDirs>
-          TableProducer
-        </subDirs>
         <!-- selection of files to consider as CMakeLists files -->
+        <!-- relative to CMLfiles/mainDir -->
         <fileName>
-          CMakeLists.txt
+          TableProducer/CMakeLists.txt
         </fileName>
       </CMLfiles>
 
@@ -232,15 +232,96 @@
       <codeFiles>
         <!-- relative to O2general/mainDir/O2Physicslocal -->
         <mainDir>
-          PWGCF
+          PWGDQ
         </mainDir>
-        <!-- relative to codeFiles/mainDir -->
-        <subDirs>
-          TableProducer
-        </subDirs>
         <!-- selection of files to consider as task code files -->
+        <!-- relative to codeFiles/mainDir -->
         <fileName>
-          *.cxx
+          TableProducer/*.cxx
+        </fileName>
+      </codeFiles>
+    </DataModel>
+
+
+    <DataModel type="PWG" name="HF">
+      <!-- where to get the extra header files from -->
+      <headerFiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGHF
+        </mainDir>
+        <!-- selection of files to consider as header files -->
+        <!-- relative to headerFiles/mainDir -->
+        <fileName>
+          DataModel/*.h, TableProducer/*.cxx
+        </fileName>
+      </headerFiles>
+
+      <!-- where to get the CMakeLists.txt files from -->
+      <CMLfiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGHF
+        </mainDir>
+        <!-- selection of files to consider as CMakeLists files -->
+        <!-- relative to CMLfiles/mainDir -->
+        <fileName>
+          TableProducer/CMakeLists.txt
+        </fileName>
+      </CMLfiles>
+
+      <!-- where to get the task code files from -->
+      <codeFiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGHF
+        </mainDir>
+        <!-- selection of files to consider as task code files -->
+        <!-- relative to codeFiles/mainDir -->
+        <fileName>
+          TableProducer/*.cxx
+        </fileName>
+      </codeFiles>
+    </DataModel>
+
+
+    <DataModel type="PWG" name="JE">
+      <!-- where to get the extra header files from -->
+      <headerFiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGJE
+        </mainDir>
+        <!-- selection of files to consider as header files -->
+        <!-- relative to headerFiles/mainDir -->
+        <fileName>
+          DataModel/*.h, ../Common/DataModel/*.h
+        </fileName>
+      </headerFiles>
+
+      <!-- where to get the CMakeLists.txt files from -->
+      <CMLfiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGJE
+        </mainDir>
+        <!-- selection of files to consider as CMakeLists files -->
+        <!-- relative to CMLfiles/mainDir -->
+        <fileName>
+          TableProducer/CMakeLists.txt
+        </fileName>
+      </CMLfiles>
+
+      <!-- where to get the task code files from -->
+      <codeFiles>
+        <!-- relative to O2general/mainDir/O2Physicslocal -->
+        <mainDir>
+          PWGJE
+        </mainDir>
+        <!-- selection of files to consider as task code files -->
+        <!-- relative to codeFiles/mainDir -->
+        <fileName>
+          TableProducer/*.cxx
         </fileName>
       </codeFiles>
     </DataModel>
